@@ -29,8 +29,15 @@ class xtalViewer(QtGui.QApplication):
         self.wellID = ''
 
         self.wellID_dict = {
-            'A01a': 'A1', 'A01c': 'B1', 'A01d': 'B2',
-            'A02a': 'A3', 'A02c': 'B3', 'A02d': 'B4'
+            'A01a':  'A1', 'A02a':  'A3', 'A03a':  'A5', 'A04a':  'A7', 'A05a':  'A9', 'A06a': 'A11',
+            'A07a': 'A13', 'A08a': 'A15', 'A09a': 'A17', 'A10a': 'A19', 'A11a': 'A21', 'A12a': 'A23',
+
+            'A01c':  'B1', 'A02c':  'B3', 'A03c':  'B5', 'A04c':  'B7', 'A05c':  'B9', 'A06c': 'B11',
+            'A07c': 'B13', 'A08c': 'B15', 'A09c': 'B17', 'A10c': 'B19', 'A11c': 'B21', 'A12c': 'B23',
+
+            'A01d':  'B2', 'A02d':  'B4', 'A03d':  'B6', 'A04d':  'B8', 'A05d': 'B10', 'A06d': 'B12',
+            'A07d': 'B14', 'A08d': 'B16', 'A09d': 'B18', 'A10d': 'B20', 'A11d': 'B22', 'A12d': 'B24',
+
         }
 
 #        print QtGui.QImageReader.supportedImageFormats()
@@ -104,12 +111,11 @@ class xtalViewer(QtGui.QApplication):
         self.window.show()
 
 
-#    def openFile(self):
-#        fileName = tuple(QtGui.QFileDialog.getOpenFileNameAndFilter(self.window,'Open file', os.getcwd(),'*.*'))[0]
-#        print 'here',fileName
-#        self.pixmap = QtGui.QPixmap(fileName)
-#        self.canvas.setPixmap(self.pixmap)
-##        self.drawGrid()
+    def openFile(self):
+        fileName = tuple(QtGui.QFileDialog.getOpenFileNameAndFilter(self.window,'Open file', os.getcwd(),'*.*'))[0]
+        self.pixmap = QtGui.QPixmap(fileName)
+        self.canvas.setPixmap(self.pixmap)
+        self.drawGrid()
 
     def showImage(self):
         if self.imageList != []:
