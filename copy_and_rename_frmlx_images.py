@@ -1,19 +1,23 @@
 import os,glob
 import sys
 
-def copy_and_rename(plateList):
+def copy_and_rename(plateList,newFolder,minstrelDir):
     for plate in plateList:
         os.chdir(newFolder)
         if not os.path.isdir(plate[0]):
             os.mkdir(plate[0])
         os.chdir(plate[0])
-        if os.path.isdir(os.path.join(minstrelDir,plate[1][1:4],'plateID_'+plate[1])):
+        if plate[1][1:4].startswith('0'):
+            subFolder = plate[1][2:4]
+        else:
+             subFolder = plate[1][1:4]
+        if os.path.isdir(os.path.join(minstrelDir,subFolder,'plateID_'+plate[1])):
             all_subdirs = []
-            for batch in glob.glob(os.path.join(minstrelDir,plate[1][1:4],'plateID_'+plate[1],'*')):
+            for batch in glob.glob(os.path.join(minstrelDir,subFolder,'plateID_'+plate[1],'*')):
                 all_subdirs.append(batch)
             latest_subdir = max(all_subdirs, key=os.path.getmtime)
         
-            for wellNum in sorted(glob.glob(os.path.join(minstrelDir,plate[1][1:4],'plateID_'+plate[1],latest_subdir,'*'))):
+            for wellNum in sorted(glob.glob(os.path.join(minstrelDir,subFolder,'plateID_'+plate[1],latest_subdir,'*'))):
 #                print wellNum
                 nr = wellNum[wellNum.rfind('/')+1:].split('_')[1]
                 if nr in nr_dict:
@@ -31,26 +35,18 @@ def copy_and_rename(plateList):
                         if imageFile.startswith('d3'):
 #                            os.system('/bin/cp ' + image + ' ' + nr_dict[nr] + 'd.png')
                             os.system('convert '+image+' -resize 25% '+nr_dict[nr]+'d.png')
-#        os.chdir(newFolder)
-#        print 'zip -9 -r %s.zip %s' %(plate[0],plate[0])
-#        os.system('zip -9 -r %s.zip %s' %(plate[0],plate[0]))
-#        os.system('rm -fr %s' %plate[0])
 
 
-#                os.system('ln -s %s %s.jpg' %(os.path.join(oldFolder,image),os.path.join(newFolder,nr_dict[nr]+'c')))
-#            if imageFile.startswith('d3'):
-#                os.system('ln -s %s %s.jpg' %(os.path.join(oldFolder,image),os.path.join(newFolder,nr_dict[nr]+'d')))
-#os.chdir(newFolder)
-#
-#for image in glob.glob('*jpg'):
-#    print image
-#    root=image.replace('.jpg','')
-#    os.system('convert '+image+' -resize 40% '+root+'.png')
-#    os.system('/bin/rm %s' %image)
-#
+def errorMessage(barcodeError):
+    print barcodeError
+    print 'usage: copy_and_rename_frmlx_images <barcode> <formulatrix_id>'
+    print '       e.g.'
+    print '       copy_and_rename_frmlx_images CI059765 2345'
+    quit()
+
 
 if __name__ == '__main__':
-    newFolder = '/home/tkrojer/scripts/echo_image_viewer'
+    newFolder = os.getcwd()
 
     nr_dict = {
 
@@ -73,11 +69,25 @@ if __name__ == '__main__':
 
     }
 
-    plateList = [
 
-        ['CI070769', '8484']
-
-    ]
 
     minstrelDir = '/minstrel4/pub/fmlximages/WellImages'
-    copy_and_rename(plateList)
+
+    try:
+        swissCIbarode = sys.argv[1]
+        if not swissCIbarode.startswith('CI'):
+            barcodeError = 'ERROR: this does not seem to be a SWISS CI barcode:',sys.argv[1]
+            errorMessage(barcodeError)
+        plateList = [ [sys.argv[1],sys.argv[2] ] ]
+        copy_and_rename(plateList,newFolder,minstrelDir)
+        print '\nAll done!\n'
+
+    except IndexError:
+        barcodeError = ''
+        errorMessage(barcodeError)
+
+
+
+
+
+
