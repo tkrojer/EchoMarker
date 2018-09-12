@@ -28,17 +28,22 @@ class xtalViewer(QtGui.QApplication):
 
         self.wellID = ''
 
-        self.wellID_dict = {
-            'A01a':  'A1', 'A02a':  'A3', 'A03a':  'A5', 'A04a':  'A7', 'A05a':  'A9', 'A06a': 'A11',
-            'A07a': 'A13', 'A08a': 'A15', 'A09a': 'A17', 'A10a': 'A19', 'A11a': 'A21', 'A12a': 'A23',
-
-            'A01c':  'B1', 'A02c':  'B3', 'A03c':  'B5', 'A04c':  'B7', 'A05c':  'B9', 'A06c': 'B11',
-            'A07c': 'B13', 'A08c': 'B15', 'A09c': 'B17', 'A10c': 'B19', 'A11c': 'B21', 'A12c': 'B23',
-
-            'A01d':  'B2', 'A02d':  'B4', 'A03d':  'B6', 'A04d':  'B8', 'A05d': 'B10', 'A06d': 'B12',
-            'A07d': 'B14', 'A08d': 'B16', 'A09d': 'B18', 'A10d': 'B20', 'A11d': 'B22', 'A12d': 'B24',
-
+        self.subwell_dict = {
+            'a':    ['1','3','5','7', '9','11','13','15','17','19','21','23'],
+            'c':    ['1','3','5','7', '9','11','13','15','17','19','21','23'],
+            'd':    ['2','4','6','8','10','12','14','16','18','20','22','24']
+                    }
+        self.row_dict = {
+            'Aa':   'A', 'Ac':  'B', 'Ad':  'B',
+            'Ba':   'C', 'Bc':  'D', 'Bd':  'D',
+            'Ca':   'E', 'Cc':  'F', 'Cd':  'F',
+            'Da':   'G', 'Dc':  'H', 'Dd':  'H',
+            'Ea':   'I', 'Ec':  'J', 'Ed':  'J',
+            'Fa':   'K', 'Fc':  'L', 'Fd':  'L',
+            'Ga':   'M', 'Gc':  'N', 'Gd':  'N',
+            'Ha':   'O', 'Hc':  'P', 'Hd':  'P'
         }
+
 
 #        print QtGui.QImageReader.supportedImageFormats()
 
@@ -163,7 +168,8 @@ class xtalViewer(QtGui.QApplication):
         offset_y=(self.centre_y -
                   y)/self.pixel_to_um
         print 'x offset =',offset_x,'y offset =',offset_y
-        self.writeCSV(str(offset_x),str(offset_y))
+#        self.writeCSV(str(offset_x),str(offset_y))
+        self.writeCSV(str(x),str(y))
         time.sleep(0.5)
         self.nextImage()
 
@@ -210,7 +216,11 @@ class xtalViewer(QtGui.QApplication):
                 inLine += line
         else:
             inLine += self.csv_template
-        inLine += self.barcode+',A1,'+self.wellID_dict[self.wellID]+','+self.volume+','+offset_x+','+offset_y+'\n'
+
+        row = self.row_dict[self.wellID[0]+self.wellID[3]]
+        column = self.subwell_dict[self.wellID[3]][int(self.wellID[1:3])-1]
+#        inLine += self.barcode+',A1,'+row+column+','+self.volume+','+offset_x+','+offset_y+'\n'
+        inLine += self.barcode+','+self.wellID+','+row+column+','+self.volume+','+offset_x+','+offset_y+'\n'
         f = open(self.barcode+'.csv','w')
         f.write(inLine)
         f.close()
