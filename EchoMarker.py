@@ -6,6 +6,13 @@ import time
 
 from PyQt4 import QtGui, QtCore, QtWebKit
 
+#
+# see PAGE18-03109 in SCARAB for more details about coordinate conversion
+#
+# note that this only works if formulatrix images are converted like this: convert -resize 25%
+#
+
+
 class xtalViewer(QtGui.QApplication):
     def __init__(self,args):
         QtGui.QApplication.__init__(self,args)
@@ -120,11 +127,11 @@ class xtalViewer(QtGui.QApplication):
         fileName = tuple(QtGui.QFileDialog.getOpenFileNameAndFilter(self.window,'Open file', os.getcwd(),'*.*'))[0]
         self.pixmap = QtGui.QPixmap(fileName)
         self.canvas.setPixmap(self.pixmap)
-        self.drawGrid()
+#        self.drawGrid()
 
     def showImage(self):
         if self.imageList != []:
-            print self.imageList[self.index]
+            print 'current image:',self.imageList[self.index]
             self.pixmap = QtGui.QPixmap(self.imageList[self.index])
             self.canvas.setPixmap(self.pixmap)
             fileName = self.imageList[self.index].replace('\\','/')
@@ -142,45 +149,90 @@ class xtalViewer(QtGui.QApplication):
         pen = QtGui.QPen(QtCore.Qt.black, 1.5)
         pen.setStyle(QtCore.Qt.DotLine)
         qp = QtGui.QPainter()
-        for x in range(0,400,20):
-            qp.begin(self.pixmap)
-            qp.setPen(pen)
-            qp.drawLine(x, 0, x, 400)
-            qp.end()
-            self.canvas.setPixmap(self.pixmap)
-        for y in range(0,400,20):
-            qp.begin(self.pixmap)
-            qp.setPen(pen)
-            qp.drawLine(0, y, 400, y)
-            qp.end()
-            self.canvas.setPixmap(self.pixmap)
+        qp.begin(self.pixmap)
+        qp.setPen(pen)
+#        qp.drawLine(306, 0, 306, 512)
+#        qp.drawLine(0, 256, 612, 256)
+        pen = QtGui.QPen(QtCore.Qt.blue, 1.5)
+        qp.setPen(pen)
+        if self.wellID.endswith('a'):
+#            qp.drawLine(247, 0, 247, 512)
+#            qp.drawLine(0, 224, 612, 224)
+            qp.drawLine(224, 0, 224, 512)
+            qp.drawLine(0, 247, 612, 247)
+        elif self.wellID.endswith('c'):
+#            qp.drawLine(254, 0, 254, 512)
+#            qp.drawLine(0, 225, 612, 225)
+            qp.drawLine(225, 0, 225, 512)
+            qp.drawLine(0, 254, 612, 254)
+        elif self.wellID.endswith('d'):
+#            qp.drawLine(254, 0, 254, 512)
+#            qp.drawLine(0, 221, 612, 221)
+            qp.drawLine(221, 0, 221, 512)
+            qp.drawLine(0, 254, 612, 254)
+        qp.end()
+        self.canvas.setPixmap(self.pixmap)
+#        for x in range(0,800,40):
+#            qp.begin(self.pixmap)
+#            qp.setPen(pen)
+#            qp.drawLine(x, 0, x, 800)
+#            qp.end()
+#            self.canvas.setPixmap(self.pixmap)
+#        for y in range(0,800,40):
+#            qp.begin(self.pixmap)
+#            qp.setPen(pen)
+#            qp.drawLine(0, y, 800, y)
+#            qp.end()
+#            self.canvas.setPixmap(self.pixmap)
+
+    def paintEvent(self,x,y):
+        pen = QtGui.QPen(QtCore.Qt.red, 1.5)
+        qp = QtGui.QPainter()
+        qp.begin(self.pixmap)
+        qp.setPen(pen)
+        qp.setBrush(QtCore.Qt.red)
+        center = QtCore.QPoint(x, y)
+        qp.drawEllipse(center,20,20)
+        qp.end()
+        self.canvas.setPixmap(self.pixmap)
 
     def getPos(self , event):
         x = event.pos().x()
         y = event.pos().y()
-        print 'mouse position',x,y
+#        print 'mouse position',x,y
         self.paintEvent(x,y)
-        print self.centre_x - x
-        print self.centre_y - y
-        distance_from_centre = math.sqrt(math.pow(self.centre_x-x,2)+math.pow(self.centre_y - y,2))/self.pixel_to_um
-        print distance_from_centre
-        offset_x=(x -self.centre_x)/self.pixel_to_um
-        offset_y=(self.centre_y -
-                  y)/self.pixel_to_um
-        print 'x offset =',offset_x,'y offset =',offset_y
+#        print self.centre_x - x
+#        print self.centre_y - y
+#        distance_from_centre = math.sqrt(math.pow(self.centre_x-x,2)+math.pow(self.centre_y - y,2))/self.pixel_to_um
+#        print distance_from_centre
+#        offset_x=(x -self.centre_x)/self.pixel_to_um
+#        offset_y=(self.centre_y -
+#                  y)/self.pixel_to_um
+#        print 'x offset =',offset_x,'y offset =',offset_y
 #        self.writeCSV(str(offset_x),str(offset_y))
-        self.writeCSV(str(x),str(y))
-        time.sleep(0.5)
-        self.nextImage()
+        self.pixelToECHOcoord(x,y)
 
-    def paintEvent(self,x,y):
-        qp = QtGui.QPainter()
-        qp.begin(self.pixmap)
-        qp.setPen(QtCore.Qt.red)
-        qp.setBrush(QtCore.Qt.red)
-        qp.drawEllipse(x,y,20,20)
-        qp.end()
-        self.canvas.setPixmap(self.pixmap)
+    def pixelToECHOcoord(self,x,y):
+        if self.wellID.endswith('a'):
+#            x = 0.187 * Ex + 247.8
+            Ey = int(float(y - 247.8)/0.187)
+#            y = -0.1731 * Ey + 223.8
+            Ex = int(float(x-223.8)/-0.1731)
+        elif self.wellID.endswith('c'):
+#            x = 0.1875 * Ex + 253.7
+            Ey = int(float(y - 253.7)/0.1875)
+#            y = -0.1754 * Ey + 225
+            Ex = int(float(x-225)/-0.1754)
+        elif self.wellID.endswith('d'):
+#            x = 0.187 * Ex + 253.9
+            Ey = int(float(y - 253.9) / 0.187)
+#            y = -0.1786 * Ey + 221
+            Ex = int(float(x-221)/-0.1786)-700
+        print 'IMAGE x,y',x,y
+        print 'ECHO x,y',Ex,Ey
+        self.writeCSV(str(Ex),str(Ey))
+        time.sleep(0.2)
+        self.nextImage()
 
     def quitApp(self):
         QtGui.qApp.quit()
@@ -189,39 +241,56 @@ class xtalViewer(QtGui.QApplication):
         self.index = 0  # reset index
         self.imageList = []
         for image in sorted(glob.glob(os.path.join(self.imageFolder,'*png'))):
-            print image
+            print 'loading',image
             self.imageList.append(image)
         self.showImage()
+        self.drawGrid()
+
+#        row_order = ['A','B','C','D','E','F','G','H']
+#        column_order = ['01','02','03','04','05','06','07','08','09','10','11','12']
+#        subwell_order = ['a','c','d']
+#
+#        t = []
+#        for l in self.imageList:
+#            row = l[0][l[0].rfind('/')+1:l[0].rfind('/')+2]
+#            column = l[0][l[0].rfind('/')+2:l[0].rfind('/')+4]
+#            subwell = l[0][l[0].rfind('/')+4:l[0].rfind('/')+5]
+#            for i,m in enumerate(t):
+
+
 
     def nextImage(self):
         if self.index < len(self.imageList)-1:
-            print self.index,len(self.imageList)
+#            print self.index,len(self.imageList)
             self.index+=1
         else:
             self.index = 0
         self.showImage()
+        self.drawGrid()
 
     def previousImage(self):
         if self.index > 0:
-            print self.index,len(self.imageList)
+#            print self.index,len(self.imageList)
             self.index+=-1
         else:
             self.index = len(self.imageList)-1
         self.showImage()
+        self.drawGrid()
 
     def writeCSV(self,offset_x,offset_y):
         inLine = ''
-        if os.path.isfile(self.barcode+'.csv'):
-            for line in open(self.barcode+'.csv'):
+        if os.path.isfile(self.barcode+'_RI1000-0276-3drop_targets.csv'):
+            for line in open(self.barcode+'_RI1000-0276-3drop_targets.csv'):
                 inLine += line
-        else:
-            inLine += self.csv_template
+#        else:
+#            inLine += self.csv_template
 
         row = self.row_dict[self.wellID[0]+self.wellID[3]]
         column = self.subwell_dict[self.wellID[3]][int(self.wellID[1:3])-1]
 #        inLine += self.barcode+',A1,'+row+column+','+self.volume+','+offset_x+','+offset_y+'\n'
-        inLine += self.barcode+','+self.wellID+','+row+column+','+self.volume+','+offset_x+','+offset_y+'\n'
-        f = open(self.barcode+'.csv','w')
+#        inLine += self.barcode+','+self.wellID+','+row+column+','+self.volume+','+offset_x+','+offset_y+'\n'
+        inLine += self.wellID+','+offset_x+','+offset_y+'\n'
+        f = open(self.barcode+'_RI1000-0276-3drop_targets.csv','w')
         f.write(inLine)
         f.close()
 
